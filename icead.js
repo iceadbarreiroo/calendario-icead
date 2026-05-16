@@ -599,7 +599,9 @@ document
     events[iso].splice(idx, 1);
 
     if (events[iso].length === 0) {
+
       delete events[iso];
+
     }
 
     await saveStorage();
@@ -610,7 +612,8 @@ document
 
   });
 
-function confirmDelete(
+/* ---------- confirmar exclusão ---------- */
+async function confirmDelete(
   iso,
   idx
 ) {
@@ -622,10 +625,12 @@ function confirmDelete(
   events[iso].splice(idx, 1);
 
   if (events[iso].length === 0) {
+
     delete events[iso];
+
   }
 
-  saveStorage();
+  await saveStorage();
 
   renderCalendar();
 
