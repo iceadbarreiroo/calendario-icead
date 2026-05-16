@@ -1,22 +1,46 @@
 let now = new Date();
+
 let currentYear = now.getFullYear();
+
 let currentMonth = now.getMonth();
 
 let editing = null;
+
 let isLoggedIn = false;
 
-const STORAGE_KEY = 'calendario_icead_events';
+/* ---------- FIREBASE ---------- */
+let events = {};
 
-let events = JSON.parse(
-  localStorage.getItem(STORAGE_KEY) || '{}'
-);
+/* ---------- carregar firebase ---------- */
+async function loadEvents() {
 
-/* ---------- salvar storage ---------- */
-function saveStorage() {
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(events)
-  );
+  const ref =
+    doc(window.db, "calendar", "events");
+
+  const snap =
+    await getDoc(ref);
+
+  if (snap.exists()) {
+
+    events =
+      snap.data().events || {};
+
+  }
+
+  renderCalendar();
+
+}
+
+/* ---------- salvar firebase ---------- */
+async function saveStorage() {
+
+  const ref =
+    doc(window.db, "calendar", "events");
+
+  await setDoc(ref, {
+    events
+  });
+
 }
 
 /* ---------- modal readonly ---------- */
@@ -64,7 +88,7 @@ function ensureFixedEvents(year, month, containerEvents) {
         e => e.type === 'Não teremos culto'
       );
 
-    // DOMINGO
+    /* DOMINGO */
     if (dt.getDay() === 0) {
 
       if (
@@ -72,11 +96,13 @@ function ensureFixedEvents(year, month, containerEvents) {
           e => e.type === 'EBD'
         )
       ) {
+
         containerEvents[iso].push({
           type: 'EBD',
           details: {},
           _auto: true
         });
+
       }
 
       if (
@@ -85,16 +111,18 @@ function ensureFixedEvents(year, month, containerEvents) {
           e => e.type === 'Culto'
         )
       ) {
+
         containerEvents[iso].push({
           type: 'Culto',
           details: {},
           _auto: true
         });
+
       }
 
     }
 
-    // QUARTA
+    /* QUARTA */
     if (dt.getDay() === 3) {
 
       if (
@@ -103,11 +131,13 @@ function ensureFixedEvents(year, month, containerEvents) {
           e => e.type === 'Culto'
         )
       ) {
+
         containerEvents[iso].push({
           type: 'Culto',
           details: {},
           _auto: true
         });
+
       }
 
     }
@@ -169,7 +199,7 @@ function renderCalendar() {
       0
     ).getDate();
 
-  // espaços vazios
+  /* espaços vazios */
   for (let b = 0; b < firstDay; b++) {
 
     const empty =
@@ -181,7 +211,7 @@ function renderCalendar() {
 
   }
 
-  // dias
+  /* dias */
   for (let d = 1; d <= total; d++) {
 
     const dateObj =
@@ -199,7 +229,8 @@ function renderCalendar() {
 
     div.className = 'day';
 
-    div.innerHTML = `<strong>${d}</strong>`;
+    div.innerHTML =
+      `<strong>${d}</strong>`;
 
     const dayEvents =
       evCopy[iso] || [];
@@ -229,31 +260,39 @@ function renderCalendar() {
         e.stopPropagation();
 
         if (isLoggedIn) {
+
           openModalForEdit(
             iso,
             idx,
             ev
           );
+
         } else {
+
           openModalForView(ev);
+
         }
 
       };
 
-      // ações admin
+      /* admin */
       if (isLoggedIn) {
 
         const actions =
           document.createElement('div');
 
-        actions.className = 'actions';
+        actions.className =
+          'actions';
 
-        // editar
+        /* editar */
         const editBtn =
           document.createElement('span');
 
-        editBtn.className = 'icon';
-        editBtn.textContent = '✏️';
+        editBtn.className =
+          'icon';
+
+        editBtn.textContent =
+          '✏️';
 
         editBtn.onclick = (e) => {
 
@@ -267,12 +306,15 @@ function renderCalendar() {
 
         };
 
-        // excluir
+        /* excluir */
         const delBtn =
           document.createElement('span');
 
-        delBtn.className = 'icon';
-        delBtn.textContent = '🗑️';
+        delBtn.className =
+          'icon';
+
+        delBtn.textContent =
+          '🗑️';
 
         delBtn.onclick = (e) => {
 
@@ -286,6 +328,7 @@ function renderCalendar() {
         };
 
         actions.appendChild(editBtn);
+
         actions.appendChild(delBtn);
 
         evDiv.appendChild(actions);
@@ -296,11 +339,13 @@ function renderCalendar() {
 
     });
 
-    // adicionar evento
+    /* adicionar evento */
     div.onclick = () => {
 
       if (isLoggedIn) {
+
         openModalForAdd(iso);
+
       }
 
     };
@@ -311,7 +356,7 @@ function renderCalendar() {
 
 }
 
-/* ---------- abrir modal adicionar ---------- */
+/* ---------- adicionar ---------- */
 function openModalForAdd(iso) {
 
   editing = null;
@@ -477,7 +522,7 @@ document
 /* ---------- salvar ---------- */
 document
   .getElementById('save-event')
-  .addEventListener('click', () => {
+  .addEventListener('click', async () => {
 
     const iso =
       document.getElementById(
@@ -534,7 +579,7 @@ document
 
     }
 
-    saveStorage();
+    await saveStorage();
 
     closeModal();
 
@@ -545,7 +590,7 @@ document
 /* ---------- excluir ---------- */
 document
   .getElementById('modalDelete')
-  .addEventListener('click', () => {
+  .addEventListener('click', async () => {
 
     if (!editing) return;
 
@@ -557,7 +602,7 @@ document
       delete events[iso];
     }
 
-    saveStorage();
+    await saveStorage();
 
     closeModal();
 
@@ -594,8 +639,11 @@ document.getElementById(
   currentMonth--;
 
   if (currentMonth < 0) {
+
     currentMonth = 11;
+
     currentYear--;
+
   }
 
   renderCalendar();
@@ -609,8 +657,11 @@ document.getElementById(
   currentMonth++;
 
   if (currentMonth > 11) {
+
     currentMonth = 0;
+
     currentYear++;
+
   }
 
   renderCalendar();
@@ -685,21 +736,15 @@ function exportarPDF() {
 
   let y = 40;
 
-  const evCopy =
-    JSON.parse(JSON.stringify(events || {}));
+  Object.keys(events).forEach(date => {
 
-  Object.keys(evCopy).forEach(date => {
-
-    evCopy[date].forEach(ev => {
+    events[date].forEach(ev => {
 
       const detalhes =
         ev.details || {};
 
       const texto =
-        `${date} | ${ev.type} | ${detalhes.horario || '--:--'} | ` +
-        `Abertura: ${detalhes.abertura || '-'} | ` +
-        `Louvor: ${detalhes.louvor || '-'} | ` +
-        `Palavra: ${detalhes.palavra || '-'}`;
+        `${date} | ${ev.type} | ${detalhes.horario || '--:--'}`;
 
       doc.setFontSize(11);
 
@@ -738,18 +783,12 @@ function exportarExcel() {
         <th>Data</th>
         <th>Tipo</th>
         <th>Horário</th>
-        <th>Abertura</th>
-        <th>Louvor</th>
-        <th>Palavra</th>
       </tr>
   `;
 
-  const evCopy =
-    JSON.parse(JSON.stringify(events || {}));
+  Object.keys(events).forEach(date => {
 
-  Object.keys(evCopy).forEach(date => {
-
-    evCopy[date].forEach(ev => {
+    events[date].forEach(ev => {
 
       const detalhes =
         ev.details || {};
@@ -759,9 +798,6 @@ function exportarExcel() {
           <td>${date}</td>
           <td>${ev.type}</td>
           <td>${detalhes.horario || ''}</td>
-          <td>${detalhes.abertura || ''}</td>
-          <td>${detalhes.louvor || ''}</td>
-          <td>${detalhes.palavra || ''}</td>
         </tr>
       `;
 
@@ -797,4 +833,4 @@ function exportarExcel() {
 }
 
 /* ---------- iniciar ---------- */
-renderCalendar();
+loadEvents();
