@@ -382,3 +382,11 @@ h1{
   }
 
 }
+
+.logo{
+  width:220px !important;
+  max-width:220px !important;
+  height:auto !important;
+  display:block;
+  margin:0 auto;
+}
