@@ -285,11 +285,12 @@ h1{
     text-align:center;
   }
 
-  header img{
-    width:180px;
-    height:auto;
-  }
-
+ header img{
+  width:250px;
+  max-width:100%;
+  height:auto;
+}
+  
   h1{
     font-size:22px;
     text-align:center;
